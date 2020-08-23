@@ -1,0 +1,83 @@
+polygon = pd.read_csv('manhattan.csv')
+# print(clean_taxi.shape)
+taxi_sample = clean_taxi.sample(frac=0.05)
+# print(taxi_sample.shape)
+# print(taxi_sample.head())
+# print(polygon)
+
+# Code for inside polygon detection in C++:
+#     int   i, j=polyCorners-1 ;
+#   bool  oddNodes=NO      ;
+
+#   for (i=0; i<polyCorners; i++) {
+#     if (polyY[i]<y && polyY[j]>=y ||  polyY[j]<y && polyY[i]>=y) {
+#       if (polyX[i]+(y-polyY[i])/(polyY[j]-polyY[i])*(polyX[j]-polyX[i])<x) {
+#         oddNodes=!oddNodes; 
+#       }
+#     }
+#     j=i; 
+#   }
+
+#   return oddNodes; }
+
+
+#Recommended: First develop and test a function that takes a position
+#             and returns whether it's in Manhattan.
+
+# Creating python lists of the lon and lat
+poly_y = polygon['lat'].tolist()
+poly_x = polygon['lon'].tolist()
+# print("poly y:", poly_y)
+# print("poly x:", poly_x)
+
+def in_manhattan(x, y):
+    """Whether a longitude-latitude (x, y) pair is in the Manhattan polygon."""
+    poly_corners = polygon.shape[0]
+    j = poly_corners - 1
+    odd_node = False
+    
+    for i in range(poly_corners):
+        if( ((poly_y[i] < y and poly_y[j] >= y) or (poly_y[j] < y and poly_y[i] >= y)) 
+           and (poly_x[i] <= x or poly_x[j] <= x)):
+            if(poly_x[i] + (y-poly_y[i])/(poly_y[j]-poly_y[i])*(poly_x[j]-poly_x[i]) < x):
+                odd_node = not odd_node
+        j = i
+        
+    return odd_node
+
+# testing if function works
+#print(in_manhattan(-74.015251, 40.709808))
+    
+# Recommended: Then, apply this function to every trip to filter clean_taxi.
+print(taxi_sample.shape[0])
+#print(taxi_sample.head())
+j = 0
+# manhattan_taxi = pd.DataFrame(data=None, columns=['pickup_datetime', 'dropoff_datetime',
+#                                                  'pickup_lon', 'pickup_lat', 'dropoff_lon', 'dropoff_lat',
+#                                                  'passengers', 'distance', 'duration'])
+manhattan_taxi = clean_taxi
+manhattan_taxi = manhattan_taxi.iloc[0:0]
+print(type(manhattan_taxi))
+
+
+for i in range(clean_taxi.shape[0]):
+#     print(taxi_sample['dropoff_lat'].iloc[i])
+#     print( taxi_sample['dropoff_lon'].iloc[i])
+
+    if(in_manhattan(clean_taxi['dropoff_lon'].iloc[i], clean_taxi['dropoff_lat'].iloc[i]) == True and 
+       in_manhattan(clean_taxi['pickup_lon'].iloc[i], clean_taxi['pickup_lat'].iloc[i]) == True):
+        #manhattan_taxi.iloc[j] = taxi_sample.iloc[i]
+        manhattan_taxi = manhattan_taxi.append(clean_taxi.iloc[i])
+        #print(taxi_sample.iloc[i])
+        j += 1
+print("j:", j)
+
+print(clean_taxi.info())
+
+manhattan_taxi['duration'] = manhattan_taxi['duration'].astype(int)
+print(type(manhattan_taxi))
+print(type(clean_taxi))
+print(manhattan_taxi.info())
+print(manhattan_taxi.head())
+print("test")
+      
